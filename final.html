@@ -41,7 +41,7 @@ Handling specular materials in BDPT is simple. Given a complete path that involv
 
 <h3 align="middle">Evidence of Correctness</h3>
 
-<p>For a scene with diffuse materials only (no SDS paths so PPM is not used), it is visually convincing that path tracing, light tracing, and bidirectional path tracing all converge to the same image within reasonable amount of samples per pixel (see results below). For the same scene, a convergence curve versus number of samples for one pixel is generated for both BDPT and PT (see results below). According to the curve, both methods appear to converge to the same spectrum value. Although these are not conclusive proof of correctness, they provide strong evidence.</p>
+<p>For a scene with diffuse materials only (no SDS paths so PPM is not used), it is visually convincing that path tracing, light tracing, and bidirectional path tracing all converge to the same image within reasonable amount of samples per pixel (see <a href="#results">Results</a> below). For the same scene, a convergence curve versus number of samples for one pixel is generated for both BDPT and PT (see <a href="#results">Results</a> below). According to the curve, both methods appear to converge to the same spectrum value. Although these are not conclusive proof of correctness, they provide strong evidence.</p>
 
 <div align="center">
 	<table>
@@ -63,7 +63,7 @@ Handling specular materials in BDPT is simple. Given a complete path that involv
 
 <h3 align="middle">Strengths of BDPT</h3>
 
-<p>To demonstrate the strength of BDPT, please take a look at the microfacet dragon with alpha = 0.005 (see results below) (still no SDS paths so PPM is not used). This scene was known to be difficult to render with PT, which allows two types of sampling techniques to contribute to the image: either the eye path directly hitting a scene light (type 0 technique) or randomly choosing a point on a scene light and connecting the eye path to it (type 1 technique). We didn't have to worry about weighting the contributions of different types of techniques in PT because when the last vertex of eye path lands on a specular material, we only count contribution of type 0 technique, and if otherwise, only contribution of type 1 technique is counted. When the last vertex of eye path lands on a microfacet material, since it is not specular, we will only count type 1 technique. However, due to the near specular nature of low alpha microfacet materials, sampling the light vertex by the importance sampling of the scene light rather than the importance sampling of the material makes the rate of convergence extremely low. This is why it was difficult to render with PT. Note that this scene is hard to render with light tracing alone as well, since light tracing only allows type k-1 technique (where k is the number of vertices on a path) and when the last vertex of light path lands on the dragon, the same problem as in PT will make the rate of convergence extremely low. With BDPT however, since there are no specular materials in the scene, a path with k vertices can be sampled by k different techniques (excluding directly hitting the eye), and the contributions of a sampled complete path is weighted according to how important it is, so that techniques that perform better on a given path will be more important to the final image. Thanks to multiple importance sampling, BDPT combines strengths of path tracing, light tracing and other possible techniques and is thus much more robust than path tracing or light tracing alone.</p>
+<p>To demonstrate the strength of BDPT, please take a look at the microfacet dragon with alpha = 0.005 (see <a href="#results">Results</a> below). This scene was known to be difficult to render with PT, which allows two types of sampling techniques to contribute to the image: either the eye path directly hitting a scene light (type 0 technique) or randomly choosing a point on a scene light and connecting the eye path to it (type 1 technique). We didn't have to worry about weighting the contributions of different types of techniques in PT because when the last vertex of eye path lands on a specular material, we only count contribution of type 0 technique, and if otherwise, only contribution of type 1 technique is counted. When the last vertex of eye path lands on a microfacet material, since it is not specular, we will only count type 1 technique. However, due to the near specular nature of low alpha microfacet materials, sampling the light vertex by the importance sampling of the scene light rather than the importance sampling of the material makes the rate of convergence extremely low. This is why it was difficult to render with PT. Note that this scene is hard to render with light tracing alone as well, since light tracing only allows type k-1 technique (where k is the number of vertices on a path) and when the last vertex of light path lands on the dragon, the same problem as in PT will make the rate of convergence extremely low. With BDPT however, since there are no specular materials in the scene, a path with k vertices can be sampled by k different techniques (excluding directly hitting the eye), and the contributions of a sampled complete path is weighted according to how important it is, so that techniques that perform better on a given path will be more important to the final image. Thanks to multiple importance sampling, BDPT combines strengths of path tracing, light tracing and other possible techniques and is thus much more robust than path tracing or light tracing alone.</p>
 
 <p>Besides rendering low alpha microfacet materials, another strength of BDPT that outperforms PT is on the rendering of caustics, due to the contributions of light tracing. However, when caustics are reflected and viewed on a specular surface, they will look noisy with naive BDPT.</p>
 
@@ -87,7 +87,8 @@ Handling specular materials in BDPT is simple. Given a complete path that involv
 <h3 align="middle">Glass Handling</h3>
 <p>With PPM handling SDS paths, the last source of noticeable noise that needs to be handled is the glass. Glass materials are noisy because we used Russian roulette to decide on reflection or transmission, and let the winning path carry all the energy. To denoise, simply trace both reflected and transmitted paths each carrying energy propotional to winning chance. For performance considerations, only specular paths (every inner vertex is specular) applied this technique. In addition, in progressive photon mapping, the ray tracing pass also applied this technique. See the final results below.</p>
 
-<h2>Results</h2>
+<section class="results">
+<a name="results" class="anchor"><h2>Results</h2></a>
 
 <h3>Diffuse Spheres</h3>
 
@@ -105,12 +106,14 @@ Handling specular materials in BDPT is simple. Given a complete path that involv
 		</tr>
 		<tr>
 			<td>
-				<img src="images/spheres/spheres_d.png">
+				<img src="images/spheres/spheres_d.png" width="480px">
 				<figcaption align="center">Diffuse spheres rendered with bidirectional path tracing, 1024 spp.</figcaption>
 			</td>
 		</tr>
 	</table>
 </div>
+
+<p>At 1024 samples per pixel all three methods converge to approximatley the same image for diffuse spheres with the bidirectional path tracer being slightly better.</p>
 
 <h3>Microfacet Dragon</h3>
 
@@ -128,12 +131,14 @@ Handling specular materials in BDPT is simple. Given a complete path that involv
 		</tr>
 		<tr>
 			<td>
-				<img src="images/dragon/dragon_0.005.png">
+				<img src="images/dragon/dragon_0.005.png" width="480px">
 				<figcaption align="center">Microfacet dragon rendered with bidirectional path tracing, 1024 spp.</figcaption>
 			</td>
 		</tr>
 	</table>
 </div>
+
+<p>On microfacet materials the bidirectional path tracer performs significantly better than either path or light tracing alone. </p>
 
 <h3>Specular Spheres</h3>
 
@@ -142,25 +147,69 @@ Handling specular materials in BDPT is simple. Given a complete path that involv
 		<tr>
 			<td>
 				<img src="images/spheres/spheres_pt.png" width="480px">
-				<figcaption align="center">Specular spheres rendered with path tracing, 1024 spp.</figcaption>
+				<figcaption align="center">Path tracing at 1024 spp.</figcaption>
 			</td>
 			<td>
 				<img src="images/spheres/spheres_lt.png" width="480px">
-				<figcaption align="center">Specular spheres rendered with light tracing, 1024 spp.</figcaption>
+				<figcaption align="center">Light tracing at 1024 spp.</figcaption>
 			</td>
 		</tr>
 		<tr>
 			<td>
-				<img src="images/spheres/spheres.png">
-				<figcaption align="center">Specular spheres rendered with bidirectional path tracing, 1024 spp.</figcaption>
+				<img src="images/spheres/spheres_bdpt.png" width="480px">
+				<figcaption align="center">Naive BDPT at 1024 spp.</figcaption>
+			</td>
+			<td>
+				<img src="images/spheres/spheres.png" width="480px">
+				<figcaption align="center">BDPT with PPM at 1024 spp and 10^8 photons.</figcaption>
 			</td>
 		</tr>
 	</table>
 </div>
+<p>The addition of progressive photon mapping allows for scenes containing reflected caustics and SDS paths to be rendered with little noise. Above, specular spheres rendered with 1024 spp and 10^8 photons compared to just path tracing and just light tracing as well as naive bidirectional path tracing for the same scene. Below is a more challenging version of the scene also rendered with regular path tracing, light tracing and naive bidirectional path tracing as well as bidirectional path tracing with progressive photon mapping at 1024 samples perpixel and 10^8 photons. The addition of PPM is less noticeable in the image of the specular spheres but you can see some noise reduction near the base of the glass sphere. In the more challenging image the addition of PPM drastically reduces noise in the reflected caustics on both spheres.</p>
+<div align="center">
+	<table>
+		<tr>
+			<td>
+				<img src="images/spheres/caustics_pt.png" width="480px">
+				<figcaption align="center">Path tracing at 1024 spp.</figcaption>
+			</td>
+			<td>
+				<img src="images/spheres/caustics_lt.png" width="480px">
+				<figcaption align="center">Light tracing at 1024 spp.</figcaption>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<img src="images/spheres/caustics_pm.png" width="480px">
+				<figcaption align="center">Photon mapping, 10^8 photons.</figcaption>
+			</td>
+			<td>
+				<img src="images/spheres/caustics_bdpt.png" width="480px">
+				<figcaption align="center">Naive BDPT at 1024 spp.</figcaption>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<img src="images/spheres/caustics.png" width="480px">
+				<figcaption align="center">BDPT and PPM, 1024 spp and 10^8 photons.</figcaption>
+			</td>
+		</tr>
+	</table>
+</div>
+<br>
+<div align="center">
+	<iframe width="560" height="315" src="https://www.youtube.com/embed/r72DN4hDqwI" frameborder="0" allowfullscreen></iframe>
+</div>
+
+</section>
 
 <h2 align="middle">References</h2>
 <p>Veach, E. (1997). Robust monte carlo methods for light transport simulation (Doctoral dissertation, Stanford University).</p>
 <p>Hachisuka, T., Ogaki, S., & Jensen, H. W. (2008). Progressive photon mapping. ACM Transactions on Graphics (TOG), 27(5), 130.</p>
 
+<h2 align="middle">Contributions</h2>
+<p>We worked independently to develop an understanding of the material from the papers referenced. Xiangzheng wrote our code. Ian worked on the presentations and videos. We worked jointly to analyze results and write the report pages.</p>
+<p>Slides from our final presentation and our showcase presentation can be found <a href="bdpt_and_mis_with_ppm_final.pptx">here</a> and <a href="bdpt_and_mis_with_ppm_showcase.pptx">here</a></p>
 </body>
 </html>
